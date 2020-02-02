@@ -13,10 +13,10 @@ def get_type_score(text: str) -> int:
     type_score = 0
     type_score += ("英文" in text) * 1
     type_score += ("eng" in text) * 1
-    type_score += ("简体" in text) * 2
-    type_score += ("chs" in text) * 2
-    type_score += ("cht" in text) * 4
-    type_score += ("繁体" in text) * 4
+    type_score += ("简体" in text) * 4
+    type_score += ("cht" in text) * 2
+    type_score += ("chs" in text) * 4
+    #  type_score += ("繁体" in text) * 4
     type_score += ("中英" in text) * 8
     return type_score
 
@@ -44,6 +44,8 @@ def get_info_dict(name: str):
 
 
 must_matches = ["title", "streaming_service", "season", "episode", "source"]
+less_matches_tv = ["title", "season", "episode"]
+less_matches_mv = ["title"]
 
 
 def video_match(a: Tuple[str, dict], b: Tuple[str, dict]):
@@ -55,6 +57,36 @@ def video_match(a: Tuple[str, dict], b: Tuple[str, dict]):
     for keyword in must_matches:
         if a.get(keyword) != b.get(keyword):
             return False
+    return True
+
+def video_match_less(a: Tuple[str, dict], b: Tuple[str, dict], mtype='movie'):
+    if not isinstance(a, dict):
+        a = get_info_dict(a)
+    if not isinstance(b, dict):
+        b = get_info_dict(b)
+
+    if mtype == 'movie':
+        must_matches = less_matches_mv
+    else:
+        must_matches = less_matches_tv
+
+    print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx a")
+    print(a)
+    print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx b")
+    print(b)
+    print("YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
+
+    for keyword in must_matches:
+        ars = a.get(keyword)
+        brs = b.get(keyword)
+        if isinstance(ars,str):ars = ars.lower()
+        if isinstance(brs,str):brs = brs.lower()
+
+        if ars != brs:
+            print("====== not match =====")
+            print("a.%s=>%s  || b.%s=>%s"%(keyword,ars,keyword,brs))
+            return False
+        print("a.%s=>%s  || b.%s=>%s"%(keyword,ars,keyword,brs))
     return True
 
 
@@ -73,7 +105,7 @@ def get_best_subtitle(subtitle_names: List[str], video_info: dict):
             filename = filename.encode("cp437").decode("gbk")
         except:
             pass
-        if not video_match(subtitle_name, video_info):
+        if not video_match_less(subtitle_name, video_info, video_info["type"]):
             print(f"{subtitle_name} dismatch, continue")
             continue
         score = get_type_score(filename)

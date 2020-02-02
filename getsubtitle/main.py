@@ -22,7 +22,7 @@ from .constants import (
 )
 from .subhd import SubHDDownloader
 from .sys_global_var import prefix
-from .utils import get_info_dict, get_keywords, get_type_score, video_match
+from .utils import get_info_dict, get_keywords, get_type_score, video_match_less, video_match
 from .zimuku import ZimukuDownloader
 from .zimuzu import ZimuzuDownloader
 
@@ -299,12 +299,16 @@ class GetSubtitles(object):
                 for i, downloader in enumerate(self.downloader):
                     try:
                         subtitles = downloader.get_subtitles(tuple(keywords))
+                        if subtitles is None:
+                            print("no sub")
+                            continue
                         for subtitle_name, payload in subtitles.items():
                             subtitle_version = payload.get("version", subtitle_name)
                             if not video_match(subtitle_version, info_dict):
-                                continue
-                            else:
-                                sub_dict[subtitle_name] = payload
+                                if not video_match_less(subtitle_version, info_dict, info_dict['type']):
+                                    continue
+                            #  else:
+                            sub_dict[subtitle_name] = payload
                     except ValueError as e:
                         if str(e) == "Zimuku搜索结果出现未知结构页面":
                             print(prefix + " warn: " + str(e))
